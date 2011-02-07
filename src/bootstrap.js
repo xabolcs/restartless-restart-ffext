@@ -46,6 +46,7 @@ let PREF_OBSERVER = {
     if ("nsPref:changed" != aTopic || !PREFS[aData]) return;
     runOnWindows(function(win) {
       win.document.getElementById(keyID).setAttribute(aData, getPref(aData));
+      refreshKS(win.document.getElementById(keyID).parentNode);
       addMenuItem(win);
     });
   }
