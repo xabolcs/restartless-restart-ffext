@@ -46,6 +46,7 @@ let PREF_OBSERVER = {
     if ("nsPref:changed" != aTopic || !PREFS[aData]) return;
     runOnWindows(function(win) {
       win.document.getElementById(keyID).setAttribute(aData, getPref(aData));
+      refreshKS(win.document.getElementById(keyID).parentNode);
       addMenuItem(win);
     });
   }
@@ -86,8 +87,25 @@ function addMenuItem(win) {
   unload(removeMI, win);
 }
 
-function restart() {
-  let canceled = Cc["@mozilla.org/supports-PRBool;1"]
+function refreshKS(aKeySet) {
+  if (aKeySet) {
+    dump('RR: refreshed '+aKeySet.id+'\n');
+    var parent = aKeySet.parentNode;
+    var nextn = aKeySet.nextSibling;
+    parent.removeChild(aKeySet);
+    if (nextn) {
+      parent.insertBefore(aKeySet, nextn);
+    } else {
+      parent.appendChild(aKeySet);
+    }
+    
+    parent = void(0);
+    nextn = void(0);
+  }
+}
+
+function restart(aEvent) {
+/*  let canceled = Cc["@mozilla.org/supports-PRBool;1"]
       .createInstance(Ci.nsISupportsPRBool);
 
   Services.obs.notifyObservers(canceled, "quit-application-requested", "restart");
@@ -96,7 +114,19 @@ function restart() {
 
   Cc['@mozilla.org/toolkit/app-startup;1'].getService(Ci.nsIAppStartup)
       .quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
-
+*/
+  try {
+    Cc["@mozilla.org/alerts-service;1"]
+      .getService(Components.interfaces.nsIAlertsService)
+      .showAlertNotification(
+        "chrome://global/skin/icons/Warning.png"
+        , 'RR'
+        , 'restarted! '+aEvent.originalTarget.id
+      );
+  } catch(e) {
+      // prevents runtime error on platforms that don't implement nsIAlertsService
+      dump('RR: restart died, error='+e.message+'\n');
+  }
   return true;
 }
 
@@ -113,6 +143,8 @@ function main(win) {
     restartKey.addEventListener("command", restart, true);
     $("mainKeyset").appendChild(restartKey);
   }
+  
+  refreshKS($(keyID).parentNode);
 
   // add menu bar item to File menu
   addMenuItem(win);
@@ -120,18 +152,32 @@ function main(win) {
   // add app menu item to Firefox button for Windows 7
   let appMenu = $("appmenuPrimaryPane"), restartAMI;
   if (appMenu) {
-    restartAMI = $(fileMenuitemID).cloneNode(false);
-    restartAMI.setAttribute("id", "appmenu_RestartItem");
-    restartAMI.setAttribute("class", "menuitem-iconic menuitem-iconic-tooltip");
-    restartAMI.style.listStyleImage = "url('" + logo + "')";
-    restartAMI.addEventListener("command", restart, true);
-    appMenu.insertBefore(restartAMI, $("appmenu-quit"));
+    try {
+      dump('RR: in appmenu!\n');
+      
+      restartAMI = $(fileMenuitemID).cloneNode(false);
+      restartAMI.setAttribute("id", "appmenu_RestartItem");
+      restartAMI.setAttribute("class", "menuitem-iconic menuitem-iconic-tooltip");
+      restartAMI.style.listStyleImage = "url('" + logo + "')";
+      restartAMI.addEventListener("command", restart, true);
+      appMenu.insertBefore(restartAMI, $("appmenu-quit"));
+    } catch(ex) {
+      dump('RR: appmenu died '+ex.message+'\n');
+    }
+    dump('RR: main finished!\n');
   }
 
   unload(function() {
-    var key = $(keyID);
-    key && key.parentNode.removeChild(key);
-    appMenu && appMenu.removeChild(restartAMI);
+    try {
+      var key = $(keyID);
+      var keyParent = key.parentNode;
+      key && key.parentNode.removeChild(key);
+      
+      appMenu && appMenu.removeChild(restartAMI);
+      refreshKS(keyParent);
+    } catch (ex) {
+      dump('RR: unload of main died! '+' '+ex.message+'\n');
+    }
   }, win);
 }
 
