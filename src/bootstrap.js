@@ -86,6 +86,17 @@ function addMenuItem(win) {
   unload(removeMI, win);
 }
 
+function refreshKS(aKeySet) {
+  var parent = aKeySet.parentNode;
+  var nextn = aKeySet.nextSibling;
+  parent.removeChild(aKeySet);
+  if (nextn) {
+    parent.insertBefore(aKeySet, nextn);
+  } else {
+    parent.appendChild(aKeySet);
+  }
+}
+
 function restart() {
   let canceled = Cc["@mozilla.org/supports-PRBool;1"]
       .createInstance(Ci.nsISupportsPRBool);
@@ -113,7 +124,11 @@ function main(win) {
     restartKey.addEventListener("command", restart, true);
     $("mainKeyset").appendChild(restartKey);
   }
-
+  
+  // refresh hotkey's parent keyset: mainKeyset
+  // for startup
+  refreshKS($(keyID).parentNode);
+  
   // add menu bar item to File menu
   addMenuItem(win);
 
@@ -130,7 +145,12 @@ function main(win) {
 
   unload(function() {
     var key = $(keyID);
+    var keyParent = key.parentNode;
     key && key.parentNode.removeChild(key);
+    
+    // refresh keyset for the shutdown
+    refreshKS(keyParent);
+    
     appMenu && appMenu.removeChild(restartAMI);
   }, win);
 }
