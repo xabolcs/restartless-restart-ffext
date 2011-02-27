@@ -105,7 +105,7 @@ function refreshKS(aKeySet) {
 }
 
 function restart(aEvent) {
-/*  let canceled = Cc["@mozilla.org/supports-PRBool;1"]
+  let canceled = Cc["@mozilla.org/supports-PRBool;1"]
       .createInstance(Ci.nsISupportsPRBool);
 
   Services.obs.notifyObservers(canceled, "quit-application-requested", "restart");
@@ -114,7 +114,7 @@ function restart(aEvent) {
 
   Cc['@mozilla.org/toolkit/app-startup;1'].getService(Ci.nsIAppStartup)
       .quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
-*/
+
   try {
     Cc["@mozilla.org/alerts-service;1"]
       .getService(Components.interfaces.nsIAlertsService)
@@ -141,7 +141,8 @@ function main(win) {
     restartKey.setAttribute("modifiers", getPref("modifiers"));
     restartKey.setAttribute("oncommand", "void(0);");
     restartKey.addEventListener("command", restart, true);
-    $("mainKeyset").appendChild(restartKey);
+    //$("mainKeyset").appendChild(restartKey);
+    $("mailKeys").appendChild(restartKey);
   }
   
   refreshKS($(keyID).parentNode);
@@ -164,7 +165,7 @@ function main(win) {
     } catch(ex) {
       dump('RR: appmenu died '+ex.message+'\n');
     }
-    dump('RR: main finished!\n');
+    dump('RR: appmenu finished!\n');
   }
 
   unload(function() {
@@ -184,12 +185,17 @@ function main(win) {
 function install(){}
 function uninstall(){}
 function startup(data) AddonManager.getAddonByID(data.id, function(addon) {
-  var prefs = PREF_BRANCH;
-  include(addon.getResourceURI("includes/utils.js").spec);
-  logo = addon.getResourceURI("images/refresh_16.png").spec;
-  watchWindows(main);
-  prefs = prefs.QueryInterface(Components.interfaces.nsIPrefBranch2);
-  prefs.addObserver("", PREF_OBSERVER, false);
-  unload(function() prefs.removeObserver("", PREF_OBSERVER));
+  dump('RR: startup in AddonManager \n');
+  try {
+    var prefs = PREF_BRANCH;
+    include(addon.getResourceURI("includes/utils.js").spec);
+    logo = addon.getResourceURI("images/refresh_16.png").spec;
+    watchWindows(main);
+    prefs = prefs.QueryInterface(Components.interfaces.nsIPrefBranch2);
+    prefs.addObserver("", PREF_OBSERVER, false);
+    unload(function() prefs.removeObserver("", PREF_OBSERVER));
+  } catch(ex) {
+    dump('RR: startup in AddonManager died! '+' '+ex.message+'\n');
+  }
 });
 function shutdown(data, reason) { if (reason !== APP_SHUTDOWN) unload(); }

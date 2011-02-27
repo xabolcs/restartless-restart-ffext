@@ -47,7 +47,8 @@ function runOnLoad(window, callback) {
     window.removeEventListener("load", arguments.callee, false);
 
     // Now that the window has loaded, only handle browser windows
-    if (window.document.documentElement.getAttribute("windowtype") == "navigator:browser")
+    //if (window.document.documentElement.getAttribute("windowtype") == "navigator:browser")
+    if (window.document.documentElement.getAttribute("windowtype") == "mail:3pane")
       callback(window);
   }, false);
 }
@@ -69,7 +70,8 @@ function runOnWindows(callback) {
   }
 
   // Add functionality to existing windows
-  let browserWindows = Services.wm.getEnumerator("navigator:browser");
+  //let browserWindows = Services.wm.getEnumerator("navigator:browser");
+  let browserWindows = Services.wm.getEnumerator("mail:3pane");
   while (browserWindows.hasMoreElements()) {
     // Only run the watcher immediately if the browser is completely loaded
     let browserWindow = browserWindows.getNext();
