@@ -28,20 +28,28 @@
 
 var l10n = (function(global) {
   let splitter = /(\w+)-\w+/;
-
+  
+  dump('l10n begin\n');
+  
   // get user's locale
   let locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
       .getService(Ci.nsIXULChromeRegistry).getSelectedLocale("global");
 
+  dump('l10n user locale is '+locale+'\n');
+  
   function getStr(aStrBundle, aKey) {
+    dump('l10n getStr: aKey='+aKey+'\n');
     if (!aStrBundle) return false;
     try {
+      dump('l10n getStr: localized aKey='+aStrBundle.GetStringFromName(aKey)+'\n');
       return aStrBundle.GetStringFromName(aKey);
-    } catch (e) {}
+    } catch (e) { dump('l10n getStr return of '+aKey+' dies: '+e.message+'\n'); }
     return "";
   }
 
   return function(addon, filename, defaultLocale) {
+    dump('l10n return begin\n');
+    
     defaultLocale = defaultLocale || "en";
     function filepath(locale) addon
         .getResourceURI("locale/" + locale + "/" + filename).spec
@@ -60,6 +68,8 @@ var l10n = (function(global) {
         Services.strings.createBundle(filepath(defaultLocale));
 
     return global._ = function l10n_underscore(aKey, aLocale) {
+      dump('l10n_underscore begin, locale: '+aLocale+'\n');
+      
       let localeBundle, localeBasicBundle;
       if (aLocale) {
         localeBundle = Services.strings.createBundle(filepath(aLocale));
