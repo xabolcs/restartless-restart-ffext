@@ -28,9 +28,80 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ['main','startupGecko19x'];
+
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AddonManager.jsm");
+const reportError = Cu.reportError;
+
+try {
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/AddonManager.jsm");
+} catch (ex) {
+  
+  Services = {
+    prefs : Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService),
+    scriptloader : Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader),
+    wm: Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator),
+    ww: Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher),
+    strings: Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService),
+    obs: Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService),
+    prompt: Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService)
+
+  };
+
+  Cu.import("resource://restartless-restart/includes/unload.js");
+    
+  
+  let locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
+      .getService(Ci.nsIXULChromeRegistry).getSelectedLocale("global");
+
+  let strings = Services.strings.createBundle("resource://restartless-restart/locale/"+locale+"/rr.properties");
+  let stringsDefaultLang = Services.strings.createBundle("resource://restartless-restart/locale/en/rr.properties");
+  try {
+    
+    let stringsBaseLang;
+    let splitter = /(\w+)-\w+/;
+    let (locale_base = locale.match(splitter)) {
+      if (locale_base) {
+        reportError(locale_base[1]);
+        stringsBaseLang = Services.strings.createBundle(
+            "resource://restartless-restart/locale/"+locale_base[1]+"/rr.properties");
+      }
+    }
+  } catch(ex) { reportError(ex); };
+  
+  var gecko19xAddon = {
+    makeURI: function makeURI(aURL, aOriginCharset, aBaseURI) {
+      var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                  .getService(Components.interfaces.nsIIOService);
+      return ioService.newURI(aURL, aOriginCharset, aBaseURI);
+    }
+    , getResourceURI: function getResourceURI(aURI) {
+      const res = "resource://restartless-restart/";
+      //reportError(aURI);
+      return {spec: res+aURI};
+    }
+  }
+  
+  _ = function l10ngecko19x (aKey, aLocale) {
+    let result;
+    try {
+      result = strings.GetStringFromName(aKey);
+    } catch(ex) {
+      try { 
+        result = stringsBaseLang.GetStringFromName(aKey);
+      } catch (aEx) {
+        result = stringsDefaultLang.GetStringFromName(aKey);
+      }
+    }
+    return result;
+  };
+  
+  function startupGecko19x(win) {
+    main(win);
+  }
+}
+
 
 const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const keysetID = "restartless-restart-keyset";

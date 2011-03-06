@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<overlay id="restartless-restart" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	<script type="application/x-javascript"><![CDATA[
+	// loader stub for pre-moz-2.0
+		addEventListener('load', function() {
+			removeEventListener('load', arguments.callee, true);
+			let _m = {};
+			Components.utils.import("resource://restartless-restart/bootstrap.js", _m);
+			_m.startupGecko19x(window);
+		}, true);
+	]]></script>
+	<stringbundleset id="stringbundleset">
+		<stringbundle id="restartless-restart-strings" src="chrome://restartless-restart/locale/rr.properties" />
+	</stringbundleset>
+</overlay>

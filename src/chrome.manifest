@@ -1,0 +1,6 @@
+overlay chrome://browser/content/browser.xul chrome://restartless-restart/content/
+content restartless-restart ./
+#locale restartless-restart en-US locale/en-US/
+#locale restartless-restart de locale/de/
+
+resource restartless-restart ./
