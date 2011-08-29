@@ -90,7 +90,7 @@ exports.unload = function unload(callback, container) {
   function removeUnloader() {
     let index = unloaders.indexOf(unloader);
     if (index != -1)
-      unloaders.splice(index, 1);
+      unloaders.splice(index, 1).forEach(function(unloader) unloader());
   }
   return removeUnloader;
 }
